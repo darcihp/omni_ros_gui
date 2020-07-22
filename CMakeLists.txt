@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(omni_ros_gui)
+
+find_package(OpenCV 3 REQUIRED)
+
+find_package(catkin REQUIRED COMPONENTS
+	roscpp
+	rospy
+	roslib
+	std_msgs
+	cv_bridge
+)
+
+catkin_package(
+	CATKIN_DEPENDS roscpp rospy std_msgs
+)
+
+include_directories(${catkin_INCLUDE_DIRS})
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+add_executable(view_img_raw src/view_img_raw.cpp)
+add_dependencies(view_img_raw ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(view_img_raw
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+)
