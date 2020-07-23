@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
 	roslib
 	std_msgs
 	cv_bridge
+	image_transport
 )
 
 catkin_package(
@@ -21,6 +22,13 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 add_executable(view_img_raw src/view_img_raw.cpp)
 add_dependencies(view_img_raw ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(view_img_raw
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+)
+
+add_executable(image_converter src/image_converter.cpp)
+add_dependencies(image_converter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(image_converter
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES}
 )
