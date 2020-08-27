@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+# -*- encoding: iso-8859-1 -*-
+import numpy as np
+import roslib
+import sys
+import cv2
+import rospy
+from sensor_msgs.msg import Image
+from nav_msgs.msg import Odometry
+from cv_bridge import CvBridge, CvBridgeError
+import imutils
+import matplotlib.pyplot as plt
+import rospkg
+
+class c_feature:
+	def __init__(self):
+		#Carrega endereco do package omni_ros_gui
+		rospac = rospkg.RosPack()
+		self.omni_ros_gui_path = rospac.get_path("omni_ros_gui")
+		self.omni_ros_gui_path += "/scripts"
+
+		#Abre arquivo para escrita da nova feature
+		self.fout = open(self.omni_ros_gui_path + "/features" ,"w")
+		print("Arquivo aberto")
+
+                #self.image_pub = rospy.Publisher("n_img", Image, queue_size = 10)
+		self.bridge = CvBridge();
+		self.image_sub = rospy.Subscriber("/usb_cam/image_raw", Image, self._img_raw)
+		self.odom_sub = rospy.Subscriber("/odom", Odometry, self._get_odom)
+
+		#inicializa contador
+		self.i = 0
+
+	def __del__(self):
+		#Fecha arquivo
+		self.fout.close
+		print("Features saved")
+
+	def _rawpixel(self, image, label, X, Y):
+	        image = cv2.resize(image, (X,Y))
+	        self.fout.write(str(label) +  " ")
+	        indice = 0
+	        for i in range(Y):
+	                for j in range(X):
+	                        self.fout.write(str(indice)+":"+str(image[i][j])+" ")
+	                        indice = indice+1
+	        self.fout.write("\n")
+
+	def _get_odom(self, data):
+		label = self.omni_ros_gui_path + "/img/img_"+str(self.i)+".jpg"
+		x = data.pose.pose.position.x
+		y = data.pose.pose.position.y
+		t = data.pose.pose.orientation.w #TODO
+
+		cv2.imwrite(label, self.img_turned)
+		self.fout.write("img_"+str(self.i)+" "+ str(x) +" "+str(y)+" "+str(t))
+		self.fout.write("\n")
+
+		self.i = self.i + 1
+		print("Image ID: " + str(self.i))
+
+	def _img_raw(self, data):
+		#Converte img_raw para img_opencv em escala de cinza
+		try:
+			img_original = self.bridge.imgmsg_to_cv2(data, "bgr8")
+
+			#Tamanho para transformar a imagem
+			x = 100
+			y = 100
+
+			#Redimenciona a imagem
+			img_resized = cv2.resize(img_original, (x, y))
+			self.img_turned = imutils.rotate(img_resized, 270)
+
+			#Transforma em imagem binaria
+			#ret, img_threshold = cv2.threshold(img_resized,127,1,cv2.THRESH_BINARY)
+
+			#Transforma imagem em vetor de caracteristicas
+			#self._rawpixel(img_threshold, str(self.i), x, y)
+
+		except CvBridgeError as e:
+                	rospy.loginfo(e)
+def main(args):
+        cf = c_feature()
+        rospy.init_node('n_feature', anonymous=True)
+        try:
+                rospy.spin()
+        except KeyboardInterrupt:
+                rospy.loginfo("Shutting down")
+
+if __name__ == '__main__':
+        main(sys.argv)
+
+
+
+
