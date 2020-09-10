@@ -10,11 +10,27 @@ find_package(catkin REQUIRED COMPONENTS
 	std_msgs
 	cv_bridge
 	image_transport
+	message_generation
+)
+
+add_message_files(
+        FILES
+        m_encoder.msg
+        m_motion_n.msg
+        m_motion.msg
+        m_flags.msg
+)
+
+generate_messages(
+        DEPENDENCIES
+        std_msgs
 )
 
 catkin_package(
-	CATKIN_DEPENDS roscpp rospy std_msgs
+	CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
 )
+
+
 
 include_directories(${catkin_INCLUDE_DIRS})
 #include_directories(${OpenCV_INCLUDE_DIRS})
@@ -35,14 +51,14 @@ include_directories(${catkin_INCLUDE_DIRS})
 
 #Python scripts
 
-catkin_install_python(PROGRAMS scripts/modelo_python_publica.py
+catkin_install_python(PROGRAMS scripts/manual_ctrl.py 
 	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-catkin_install_python(PROGRAMS scripts/modelo_python_escuta.py
-	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#catkin_install_python(PROGRAMS scripts/modelo_python_escuta.py
+#	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
-catkin_install_python(PROGRAMS scripts/img_view_py.py
-	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#catkin_install_python(PROGRAMS scripts/img_view_py.py
+#	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
