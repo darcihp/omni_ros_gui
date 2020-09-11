@@ -10,24 +10,25 @@ find_package(catkin REQUIRED COMPONENTS
 	std_msgs
 	cv_bridge
 	image_transport
-	message_generation
+#	message_generation
+#	omni_ros
 )
 
-add_message_files(
-        FILES
-        m_encoder.msg
-        m_motion_n.msg
-        m_motion.msg
-        m_flags.msg
-)
+#add_message_files(
+#        FILES
+#        m_encoder.msg
+#        m_motion_n.msg
+#        m_motion.msg
+#        m_flags.msg
+#)
 
-generate_messages(
-        DEPENDENCIES
-        std_msgs
-)
+#generate_messages(
+#        DEPENDENCIES
+#        std_msgs
+#)
 
 catkin_package(
-	CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+	CATKIN_DEPENDS roscpp rospy std_msgs 
 )
 
 

@@ -5,7 +5,7 @@ import roslib
 import sys
 import cv2
 import rospy
-from omni_ros_gui.msg import m_motion, m_motion_n
+from omni_ros.msg import m_motion, m_motion_n, m_flags
 from nav_msgs.msg import Odometry
 import PySimpleGUI as sg
 import matplotlib.pyplot as plt
@@ -29,6 +29,10 @@ class c_manual_ctrl:
 				[sg.RealtimeButton('L'), sg.T(' '  * 23), sg.RealtimeButton('R')],
 				[sg.RealtimeButton('LB'), sg.RealtimeButton('B'), sg.RealtimeButton('RB')],
 				[sg.T('')],
+				[sg.RealtimeButton('START'), sg.RealtimeButton('PAUSE'), sg.RealtimeButton('STOP')],
+				[sg.T('')],
+				[sg.RealtimeButton('ODOM')],
+				[sg.T('')],
 				[sg.Slider(range=(3,15), orientation='h', size=(10,20), key='slider'), sg.RealtimeButton('CW'), sg.RealtimeButton('CCW')],
 				[sg.Quit(button_color=('black', 'orange'))]
 				]
@@ -37,6 +41,9 @@ class c_manual_ctrl:
 
 		#Cria Publisher
 		self.motion_pub = rospy.Publisher("t_motion", m_motion, queue_size = 10)
+		self.flags_pub = rospy.Publisher("t_flags", m_flags, queue_size = 10)
+
+		#Cria Subscriber
 		self.odom_sub = rospy.Subscriber("/odom", Odometry, self._get_odom)
 
 	def __del__(self):
@@ -63,23 +70,40 @@ class c_manual_ctrl:
 		self.t = data.pose.pose.orientation.w #TODO
 
 def main(args):
+
+	## Variáveis de controle
+	start_aquisition = False
+	pause_aquisition = False
+	stop_aquisition = False
+	reset_odom = False
+
+	## Criação da classe
 	cmc = c_manual_ctrl()
+
+	## Criação do Nó
 	rospy.init_node('n_manual_ctrl', anonymous=True)
 	rate = rospy.Rate(10)
+
+	## Mensagens de movimento
 	_m_motion = m_motion()
 	_m_motion1 = m_motion_n()
 	_m_motion2 = m_motion_n()
 	_m_motion3 = m_motion_n()
+	_m_flags = m_flags()
 
 	while not rospy.is_shutdown():
 		event, values = cmc.get_window().read(timeout=0)
 
 		sz_slider = int(values['slider'])
 
-		print ("x: " + str(cmc.get_x()) + " y: " + str(cmc.get_y()) + " t: " + str(cmc.get_t()) )
+		#print ("x: " + str(cmc.get_x()) + " y: " + str(cmc.get_y()) + " t: " + str(cmc.get_t()) )
 
+		###############################################
+		##  Tratamento dos botões
+		###############################################
 		if event in ('Quit', sg.WIN_CLOSED):
 			break
+
 		if event == "F":
 			#print("Forward")
 			_m_motion1.rpm = sz_slider
@@ -143,10 +167,56 @@ def main(args):
 			_m_motion3.rpm = 0.0
 			_m_motion3.angle = 0.0
 
+		if event == "ODOM":
+			reset_odom = True
+
+		if event == "START":
+			start_aquisition = True
+
+		if event == "PAUSE":
+			pause_aquisition = True
+
+		if event == "STOP":
+			stop_aquisition = True
+
+
+		###############################################
+		##  Chamada de funções
+		###############################################
+		if reset_odom == True:
+			print("Reset Odometry")
+			reset_odom = False
+			_m_flags.reset_odom = True
+			cmc.flags_pub.publish(_m_flags)
+
+		if start_aquisition == True:
+			print("Start data aquisition")
+			start_aquisition = False
+			_m_flags.reset_odom = False
+			_m_flags.aquisition = 1
+			cmc.flags_pub.publish(_m_flags)
+
+		if pause_aquisition == True:
+			print("Pause data aquisition")
+			pause_aquisition = False
+			_m_flags.reset_odom = False
+			_m_flags.aquisition = 2
+			cmc.flags_pub.publish(_m_flags)
+
+		if stop_aquisition == True:
+			print("Stop data aquisition")
+			stop_aquisition = False
+			_m_flags.reset_odom = False
+			_m_flags.aquisition = 0
+			cmc.flags_pub.publish(_m_flags)
+
+
+		###############################################
+		##  Envio de mensagens
+		###############################################
 		_m_motion.motion1 = _m_motion1
 		_m_motion.motion2 = _m_motion2
 		_m_motion.motion3 = _m_motion3
-
 		cmc.motion_pub.publish(_m_motion)
 
 		rate.sleep()
