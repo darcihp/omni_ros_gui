@@ -33,7 +33,7 @@ class c_manual_ctrl:
 				[sg.T('')],
 				[sg.RealtimeButton('ODOM')],
 				[sg.T('')],
-				[sg.Slider(range=(15,20), orientation='h', size=(10,20), key='slider'), sg.RealtimeButton('CW'), sg.RealtimeButton('CCW')],
+				[sg.Slider(range=(5,20), orientation='h', size=(10,20), key='slider'), sg.RealtimeButton('CW'), sg.RealtimeButton('CCW')],
 				[sg.Quit(button_color=('black', 'orange'))]
 				]
 
