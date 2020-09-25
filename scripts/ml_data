@@ -5,7 +5,8 @@ import roslib
 import sys
 import cv2
 import rospy
-from sensor_msgs.msg import Image
+import tf
+from sensor_msgs.msg import CompressedImage
 from nav_msgs.msg import Odometry
 from omni_ros_gui.msg import m_flags
 from cv_bridge import CvBridge, CvBridgeError
@@ -28,7 +29,7 @@ class c_feature:
 
                 #self.image_pub = rospy.Publisher("n_img", Image, queue_size = 10)
 		self.bridge = CvBridge();
-		self.image_sub = rospy.Subscriber("/usb_cam/image_raw", Image, self._img_raw)
+		self.image_sub = rospy.Subscriber("/usb_cam/image_raw/compressed", CompressedImage, self._img_raw, queue_size = 1)
 		self.odom_sub = rospy.Subscriber("/odom", Odometry, self._get_odom)
 		self.flags_sub = rospy.Subscriber("/t_flags", m_flags, self._get_flags)
 
@@ -69,8 +70,18 @@ class c_feature:
 			label = self.omni_ros_gui_path + "/img/img_"+str(self.i)+".jpg"
 			x = data.pose.pose.position.x
 			y = data.pose.pose.position.y
-			t = data.pose.pose.orientation.w #TODO
-			self.fout.write("img_"+str(self.i)+" "+ str(x) +" "+str(y)+" "+str(t))
+			#t = data.pose.pose.orientation.w
+
+			quaternion = (data.pose.pose.orientation.x, data.pose.pose.orientation.y, data.pose.pose.orientation.z, data.pose.pose.orientation.w)
+
+			euler = tf.transformations.euler_from_quaternion(quaternion)
+			#roll = euler[0]
+			#pitch = euler[1]
+			yaw = euler[2]
+
+			print (yaw)
+
+			self.fout.write("img_"+str(self.i)+" "+ str(x) +" "+str(y)+" "+str(yaw))
 			self.fout.write("\n")
 			self.fout.flush()
 			cv2.imwrite(label, self.img_turned)
@@ -79,7 +90,11 @@ class c_feature:
 	def _img_raw(self, data):
 		#Converte img_raw para img_opencv em escala de cinza
 		try:
-			img_original = self.bridge.imgmsg_to_cv2(data, "bgr8")
+
+			np_arr = np.frombuffer(data.data, np.uint8)
+			img_original = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+			#img_original = self.bridge.imgmsg_to_cv2(data)
 			#Tamanho para transformar a imagem
 			x = 100
 			y = 100

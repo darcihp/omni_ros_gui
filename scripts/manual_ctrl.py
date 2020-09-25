@@ -33,7 +33,7 @@ class c_manual_ctrl:
 				[sg.T('')],
 				[sg.RealtimeButton('ODOM')],
 				[sg.T('')],
-				[sg.Slider(range=(3,15), orientation='h', size=(10,20), key='slider'), sg.RealtimeButton('CW'), sg.RealtimeButton('CCW')],
+				[sg.Slider(range=(15,20), orientation='h', size=(10,20), key='slider'), sg.RealtimeButton('CW'), sg.RealtimeButton('CCW')],
 				[sg.Quit(button_color=('black', 'orange'))]
 				]
 
@@ -82,7 +82,7 @@ def main(args):
 
 	## Criação do Nó
 	rospy.init_node('n_manual_ctrl', anonymous=True)
-	rate = rospy.Rate(10)
+	rate = rospy.Rate(15)
 
 	## Mensagens de movimento
 	_m_motion = m_motion()
@@ -93,7 +93,6 @@ def main(args):
 
 	while not rospy.is_shutdown():
 		event, values = cmc.get_window().read(timeout=0)
-
 		sz_slider = int(values['slider'])
 
 		#print ("x: " + str(cmc.get_x()) + " y: " + str(cmc.get_y()) + " t: " + str(cmc.get_t()) )
