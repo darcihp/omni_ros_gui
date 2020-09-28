@@ -76,6 +76,7 @@ def main(args):
 	pause_aquisition = False
 	stop_aquisition = False
 	reset_odom = False
+	send_data = False
 
 	## Criação da classe
 	cmc = c_manual_ctrl()
@@ -111,6 +112,7 @@ def main(args):
 			_m_motion2.angle = 0.0
 			_m_motion3.rpm = sz_slider
 			_m_motion3.angle = 1.0
+			send_data = True;
 
 		if event == "L":
 			#print("Left")
@@ -138,6 +140,7 @@ def main(args):
 			_m_motion2.angle = 0.0
 			_m_motion3.rpm = sz_slider
 			_m_motion3.angle = -1.0
+			send_data = True;
 
 		if event == "CW":
 			#print("Reverse")
@@ -147,6 +150,7 @@ def main(args):
 			_m_motion2.angle = -1.0
 			_m_motion3.rpm = sz_slider
 			_m_motion3.angle = -1.0
+			send_data = True;
 
 		if event == "CCW":
 			#print("Reverse")
@@ -156,6 +160,7 @@ def main(args):
 			_m_motion2.angle = 1.0
 			_m_motion3.rpm = sz_slider
 			_m_motion3.angle = 1.0
+			send_data = True;
 
 		if event == "__TIMEOUT__":
 			#print("TimeOut")
@@ -165,18 +170,23 @@ def main(args):
 			_m_motion2.angle = 0.0
 			_m_motion3.rpm = 0.0
 			_m_motion3.angle = 0.0
+			#send_data = True;
 
 		if event == "ODOM":
 			reset_odom = True
+			send_data = True;
 
 		if event == "START":
 			start_aquisition = True
+			send_data = True;
 
 		if event == "PAUSE":
 			pause_aquisition = True
+			send_data = True;
 
 		if event == "STOP":
 			stop_aquisition = True
+			send_data = True;
 
 
 		###############################################
@@ -186,12 +196,14 @@ def main(args):
 			print("Reset Odometry")
 			reset_odom = False
 			_m_flags.reset_odom = True
+			_m_flags.stop = True
 			cmc.flags_pub.publish(_m_flags)
 
 		if start_aquisition == True:
 			print("Start data aquisition")
 			start_aquisition = False
 			_m_flags.reset_odom = False
+			_m_flags.stop = False
 			_m_flags.aquisition = 1
 			cmc.flags_pub.publish(_m_flags)
 
@@ -206,6 +218,7 @@ def main(args):
 			print("Stop data aquisition")
 			stop_aquisition = False
 			_m_flags.reset_odom = False
+			_m_flags.stop = True
 			_m_flags.aquisition = 0
 			cmc.flags_pub.publish(_m_flags)
 
@@ -213,10 +226,12 @@ def main(args):
 		###############################################
 		##  Envio de mensagens
 		###############################################
-		_m_motion.motion1 = _m_motion1
-		_m_motion.motion2 = _m_motion2
-		_m_motion.motion3 = _m_motion3
-		cmc.motion_pub.publish(_m_motion)
+		if send_data == True:
+			_m_motion.motion1 = _m_motion1
+			_m_motion.motion2 = _m_motion2
+			_m_motion.motion3 = _m_motion3
+			cmc.motion_pub.publish(_m_motion)
+			send_data = False
 
 		rate.sleep()
 

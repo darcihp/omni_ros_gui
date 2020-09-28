@@ -21,32 +21,9 @@ from sklearn.svm import SVR
 from sklearn.svm import LinearSVR
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error
+from sklearn.svm import SVR
 
-class_names = ["Jan", "Fev", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dez"]
-
-def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):
-	plt.imshow(cm, interpolation='nearest', cmap=cmap)
-	plt.title(title)
-	plt.colorbar()
-	tick_marks = numpy.arange(len(classes))
-	plt.xticks(tick_marks, classes, rotation=45)
-	plt.yticks(tick_marks, classes)
-
-	if normalize:
-		cm = cm.astype('float') / cm.sum(axis=1)[:, numpy.newaxis]
-		print("Normalized confusion matrix")
-	else:
-		print('Confusion matrix, without normalization')
-
-	print(cm)
-
-	thresh = cm.max() / 2.
-	for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        	plt.text(j, i, "{:0.2f}".format(cm[i, j]), horizontalalignment="center", color="white" if cm[i, j] > thresh else "black")
-
-	plt.tight_layout()
-	plt.ylabel('True label')
-	plt.xlabel('Predicted label')
 
 def svm(data_train, data_test, _fout):
 
@@ -67,31 +44,26 @@ def svm(data_train, data_test, _fout):
 	#X_test = scaler.fit_transform(X_test)
 
 	# Cria Regressor
-	_svr = make_pipeline(StandardScaler(), LinearSVR(tol=1e-5))
+	#_linearsvr = make_pipeline(StandardScaler(), LinearSVR(tol=1e-5))
+	#print ('Fitting LinearSVR...')
+	#linearsvr = _linearsvr.fit(X_train, y_train)
+	#print ('Predicting...')
+	# Predicao do classificador
+	#y_pred = linearsvr.predict(X_test)
+	#mse = mean_squared_error(y_test, y_pred)
+	#print("The mean squared error (MSE) on test set: {:.4f}".format(mse))
 
-	print ('Fitting SVM...')
+
+	_svr = make_pipeline(StandardScaler(), SVR(C=1.0, epsilon=0.2))
+	print ('Fitting SVR...')
 	svr = _svr.fit(X_train, y_train)
-
 	print ('Predicting...')
 	# Predicao do classificador
 	y_pred = svr.predict(X_test)
+	mse = mean_squared_error(y_test, y_pred)
+	print("The mean squared error (MSE) on test set: {:.4f}".format(mse))
 
-	# Determina acurácia
-	accuracy = svr.score(X_test, y_test)
-
-	# cria a matriz de confusao
-	#cm = confusion_matrix(y_test, y_pred)
-
-	#numpy.set_printoptions(precision=2)
-
-	#plt.figure()
-	#plot_confusion_matrix(cm, classes=class_names, normalize=True, title="SVM One-Versus-Rest: Xception - Data Augmentation")
-	#plt.savefig(ml_lab3_path + "/xception/svm/yes_cm.png")
-
-	print("Accuracy: %f" %(accuracy))
-	#precision, recall, f1_score, support = precision_recall_fscore_support(y_test, y_pred, average='weighted')
-	#_fout.write(str(accuracy) + " " + str(precision) + " " + str(recall) + " " + str(f1_score))
-	_fout.write(str(accuracy))
+	_fout.write(str(mse))
 	_fout.write("\n")
 
 def main(args):
@@ -106,9 +78,9 @@ def main(args):
 		omni_ros_gui_path += "/scripts"
 
 		#Abre arquivo para escrita de resultados
-		fout = open(omni_ros_gui_path + "/results/results", "w")
+		fout = open(omni_ros_gui_path + "/results/results_theta", "w")
 
-		svm(omni_ros_gui_path + "/out.svm", omni_ros_gui_path + "/out_test.svm", fout)
+		svm(omni_ros_gui_path + "/out_treino_theta.svm", omni_ros_gui_path + "/out_teste_theta.svm", fout)
 
 		#X, y = load_boston(return_X_y=True)
 		#print(X.shape)
